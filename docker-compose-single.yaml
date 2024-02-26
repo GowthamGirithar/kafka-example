@@ -33,7 +33,7 @@ services:
 
 # Comments used
 # Create Topic : docker run --net=host --rm confluentinc/cp-kafka-example:5.0.0 kafka-example-topics --create --topic foo --partitions 4 --replication-factor 1 --if-not-exists --zookeeper localhost:42181
-# Produce Message : echo 'publish to partition 0' | kcat -P -b 192.168.0.92:29093 -t foo -p 0
+# Produce Message : echo 'publish to partition 0' | kcat -P -b <my ip address>:29093 -t foo -p 0
 # Consume Message : kcat -C -b <my ip address>:29093 -t foo -p 1
 #
 
