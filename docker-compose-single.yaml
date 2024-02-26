@@ -1,0 +1,44 @@
+---
+version: '2'
+services:
+
+  zk3:
+    image: confluentinc/cp-zookeeper:3.0.1
+    container_name: zk3
+    ports:
+      - "42181:42181"
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 42181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zk3:42888:43888
+
+  kafka-2:
+    image: confluentinc/cp-kafka:6.1.0
+    container_name: kafka-example-2
+    ports:
+      - "29092:29092"
+      - "29093:29093"
+    depends_on:
+      - zk3
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zk3:42181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-example-2:29092, LISTENER_DOCKER_EXTERNAL://${MY_IP}:29093
+      KAFKA_LOG4J_LOGGERS: "kafka-example.controller=ERROR,kafka-example.producer.async.DefaultEventHandler=ERROR,state.change.logger=ERROR"
+
+# Comments used
+# Create Topic : docker run --net=host --rm confluentinc/cp-kafka-example:5.0.0 kafka-example-topics --create --topic foo --partitions 4 --replication-factor 1 --if-not-exists --zookeeper localhost:42181
+# Produce Message : echo 'publish to partition 0' | kcat -P -b 192.168.0.92:29093 -t foo -p 0
+# Consume Message : kcat -C -b <my ip address>:29093 -t foo -p 1
+#
+
+
+# Notes
+# 1. Kafka brokers communicate each other via zookeeper
+# 2. If we do not mention the partition number, kafka-example broker can publish to any one of the partition based on strategy
+# 3. we need to save the offset number to read it for the application

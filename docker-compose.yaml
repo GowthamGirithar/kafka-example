@@ -1,0 +1,75 @@
+---
+version: '2'
+services:
+
+  zk1:
+    image: confluentinc/cp-zookeeper:3.0.1
+    container_name: zk1
+    ports:
+      - "12181:12181"
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 12181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zk1:22888:23888;zk2:32888:33888
+
+  zk2:
+    image: confluentinc/cp-zookeeper:3.0.1
+    container_name: zk2
+    ports:
+      - "22181:22181"
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 22181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zk1:22888:23888;zk2:32888:33888
+
+  kafka-1:
+    image: confluentinc/cp-kafka:6.1.0
+    container_name: kafka-1
+    ports:
+      - "19092:19092"
+      - "19093:19093"
+    depends_on:
+      - zk1
+      - zk2
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zk1:12181,zk2:22181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-1:19092, LISTENER_DOCKER_EXTERNAL://${MY_IP}:19093
+      KAFKA_LOG4J_LOGGERS: "kafka-example.controller=ERROR,kafka-example.producer.async.DefaultEventHandler=ERROR,state.change.logger=ERROR"
+
+  kafka-2:
+    image: confluentinc/cp-kafka:6.1.0
+    container_name: kafka-2
+    ports:
+      - "29092:29092"
+      - "29093:29093"
+    depends_on:
+      - zk1
+      - zk2
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zk1:12181,zk2:22181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-2:29092, LISTENER_DOCKER_EXTERNAL://${MY_IP}:29093
+      KAFKA_LOG4J_LOGGERS: "kafka-example.controller=ERROR,kafka-example.producer.async.DefaultEventHandler=ERROR,state.change.logger=ERROR"
+
+
+# commands:
+# MY_IP=192.168.0.92 docker-compose up
+# echo 'publish to partition hello' | kcat -P -b 192.168.0.92:29093,192.168.0.92:19093 -t test -p 2
+# If I have 3 kafka instances and topic with 3 partition, each partition there might be different leader instance.
+# For example:
+
+#  Partition 0 of Topic A might have Broker 1 as the leader.
+#  Partition 1 of Topic A might have Broker 2 as the leader.
+# Partition 2 of Topic A might have Broker 3 as the leader.
+# https://romanglushach.medium.com/kafka-in-depth-a-practical-approach-to-low-level-design-of-ecosystem-and-architecture-of-data-5467a73cb1cc
