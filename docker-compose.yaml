@@ -64,8 +64,8 @@ services:
 
 
 # commands:
-# MY_IP=192.168.0.92 docker-compose up
-# echo 'publish to partition hello' | kcat -P -b 192.168.0.92:29093,192.168.0.92:19093 -t test -p 2
+# MY_IP=<my ip address> docker-compose up
+# echo 'publish to partition hello' | kcat -P -b <my ip address>:29093,<my ip address>:19093 -t test -p 2
 # If I have 3 kafka instances and topic with 3 partition, each partition there might be different leader instance.
 # For example:
 
