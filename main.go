@@ -21,7 +21,7 @@ var (
 )
 
 func main() {
-	flag.StringVar(&kafkaBrokerUrl, "kafka-brokers", "192.168.0.92:29093,192.168.0.92:19093", "Kafka brokers in comma separated value")
+	flag.StringVar(&kafkaBrokerUrl, "kafka-brokers", "<my ip address>:29093,<my ip address>:19093", "Kafka brokers in comma separated value")
 	flag.BoolVar(&kafkaVerbose, "kafka-example-verbose", true, "Kafka verbose logging")
 	flag.StringVar(&kafkaTopic, "kafka-topic", "tettttt", "Kafka topic. Only one topic per worker.")
 	flag.StringVar(&kafkaConsumerGroup, "kafka-consumer-group", "consumer-group", "Kafka consumer group")
